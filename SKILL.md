@@ -126,7 +126,7 @@ Embed all generated images directly into the single-file HTML so the app is 100%
 
 ### 4. Assemble the Mobile-Portrait Storybook Web App
 
-Use the bundled template at `assets/storybook_template.html` as the base structure:
+Use the bundled template at `assets/storybook_template.html` (fetchable in Gemini Web via `get_skill_resources(name="user:ann-storybook", filenames=["assets/storybook_template.html"])`, or read locally from the skill's `assets/storybook_template.html`) as the base structure:
 
 - Replace `{{STORY_TITLE}}` with the story's title.
 
