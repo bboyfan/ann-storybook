@@ -158,8 +158,7 @@ Ensure the audio engine in `assets/storybook_template.html` delivers natural hum
 
 1. **Mode A — Gemini 2.5 Flash TTS (`gemini-tts`, Default in Gemini Web / Gemini Tasks Canvas)**  
    - Keep `const apiKey = "";` so Gemini Web Canvas automatically injects credentials for `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent`.
-   - Always synthesize both paragraphs of a page together in a single API call (`(PAGES[pageIdx]?.sentences || []).join(" ")`) with `temperature: 0.3` and the fixed persona anchor prompt:  
-     `請維持同一位溫柔台灣故事媽媽的穩定聲線、固定音高與平穩吐字，以流暢自然的正常語速朗讀。遇到引號對話時請保持同一個人的音色，僅微調語氣，不要誇張變聲：${rawText}`
+   - Always synthesize both paragraphs of a page together in a single API call (`(PAGES[pageIdx]?.sentences || []).join(" ")`) using the concise prompt `請用溫柔自然的台灣故事媽媽語氣朗讀：${rawText}` and preserve the **7.5-second `Promise.race` timeout + rate-limit cooldown (`ttsCooldownUntil`)** in `assets/storybook_template.html` so Canvas `postMessage` queues never hang on a page.
 
 2. **Mode B — Pre-Synthesized Embedded Neural Audio (`page.audio`, Recommended for Local/Standalone Agent HTML)**  
    - When running in a local CLI/IDE environment (such as Antigravity), concurrently synthesize all pages in parallel using `asyncio.gather` with `edge-tts` (`voice="zh-TW-HsiaoChenNeural"`, `rate="-4%"`) or Gemini TTS API (if `GEMINI_API_KEY` is present), and embed the resulting `data:audio/mp3;base64,...` string directly into `page.audio`.

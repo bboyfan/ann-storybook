@@ -323,7 +323,8 @@
 
     // Fetch a full page (2 short paragraphs combined) in ONE single TTS request so the narrator's
     // voice timbre, pitch, and acoustic room stay 100% consistent across the page.
-    async function fetchGeminiTtsPage(pageIdx, customText = null) {
+    let ttsCooldownUntil = 0;
+    async function fetchGeminiTtsPage(pageIdx, customText = null, isBackgroundPreload = false) {
       const voiceName = selectedGeminiVoice || "Kore";
       const cacheKey = customText
         ? `custom_${voiceName}_${customText}`
@@ -331,6 +332,9 @@
 
       if (geminiPcmCache[cacheKey]) {
         return geminiPcmCache[cacheKey];
+      }
+      if (Date.now() < ttsCooldownUntil) {
+        throw new Error("TTS cooldown active");
       }
       if (inflightRequests[cacheKey]) {
         return inflightRequests[cacheKey];
@@ -356,60 +360,70 @@
           }
         };
 
-        let lastErr = null;
-        for (let attempt = 0; attempt < 2; attempt++) {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 9000);
-          try {
-            if (attempt > 0) {
-              await new Promise(r => setTimeout(r, 1200));
-            }
-            const resp = await fetch(endpoint, {
+        // Single attempt with hard Promise.race timeout (7.5s) so Canvas postMessage bridge queues never hang for minutes
+        const controller = new AbortController();
+        let timeoutId = null;
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => {
+            controller.abort();
+            reject(new Error("TTS request timed out"));
+          }, 7500);
+        });
+
+        try {
+          const resp = await Promise.race([
+            fetch(endpoint, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
               signal: controller.signal
-            });
-            clearTimeout(timeoutId);
+            }),
+            timeoutPromise
+          ]);
+          clearTimeout(timeoutId);
 
-            if (!resp.ok) {
-              throw new Error(`HTTP ${resp.status}`);
+          if (!resp.ok) {
+            if (resp.status === 429 || resp.status === 503) {
+              ttsCooldownUntil = Date.now() + 25000;
             }
-
-            const data = await resp.json();
-            const parts = data?.candidates?.[0]?.content?.parts || [];
-            const audioPart = parts.find(p => p.inlineData && p.inlineData.data);
-            if (!audioPart || !audioPart.inlineData.data || audioPart.inlineData.data.length < 150) {
-              throw new Error("Empty audio payload");
-            }
-
-            let sampleRate = 24000;
-            const mime = audioPart.inlineData.mimeType || "";
-            if (mime.includes("rate=")) {
-              const m = mime.match(/rate=(\d+)/);
-              if (m) sampleRate = parseInt(m[1], 10);
-            }
-
-            const binaryString = window.atob(audioPart.inlineData.data);
-            const numSamples = Math.floor(binaryString.length / 2);
-            const durationSec = numSamples / sampleRate;
-            const wavBlobUrl = pcm16BinaryToWavBlobUrl(binaryString, sampleRate, 1);
-
-            const resultObj = {
-              base64Data: audioPart.inlineData.data,
-              sampleRate: sampleRate,
-              durationSec: durationSec,
-              wavBlobUrl: wavBlobUrl
-            };
-            geminiPcmCache[cacheKey] = resultObj;
-            updateCacheHint();
-            return resultObj;
-          } catch (err) {
-            clearTimeout(timeoutId);
-            lastErr = err;
+            throw new Error(`HTTP ${resp.status}`);
           }
+
+          const data = await resp.json();
+          const parts = data?.candidates?.[0]?.content?.parts || [];
+          const audioPart = parts.find(p => p.inlineData && p.inlineData.data);
+          if (!audioPart || !audioPart.inlineData.data || audioPart.inlineData.data.length < 150) {
+            throw new Error("Empty audio payload");
+          }
+
+          let sampleRate = 24000;
+          const mime = audioPart.inlineData.mimeType || "";
+          if (mime.includes("rate=")) {
+            const m = mime.match(/rate=(\d+)/);
+            if (m) sampleRate = parseInt(m[1], 10);
+          }
+
+          const binaryString = window.atob(audioPart.inlineData.data);
+          const numSamples = Math.floor(binaryString.length / 2);
+          const durationSec = numSamples / sampleRate;
+          const wavBlobUrl = pcm16BinaryToWavBlobUrl(binaryString, sampleRate, 1);
+
+          const resultObj = {
+            base64Data: audioPart.inlineData.data,
+            sampleRate: sampleRate,
+            durationSec: durationSec,
+            wavBlobUrl: wavBlobUrl
+          };
+          geminiPcmCache[cacheKey] = resultObj;
+          updateCacheHint();
+          return resultObj;
+        } catch (err) {
+          clearTimeout(timeoutId);
+          if (err && String(err.message).includes("timed out")) {
+            ttsCooldownUntil = Date.now() + 15000;
+          }
+          throw err || new Error("TTS failed");
         }
-        throw lastErr || new Error("TTS failed");
       })();
 
       inflightRequests[cacheKey] = requestPromise;
@@ -524,19 +538,20 @@
       }
     }
 
-    // Debounced single-page preload to avoid hitting Gemini Preview TTS RPM rate limits on rapid page swipes
+    // Lightweight on-demand preload: do not spam Gemini Preview TTS on rapid page swipes
     let preloadDebounceTimer = null;
     function preloadUpcomingPages(startPageIdx) {
       if (selectedEngine !== "gemini-tts") return;
+      if (Date.now() < ttsCooldownUntil) return;
       if (preloadDebounceTimer) clearTimeout(preloadDebounceTimer);
       const myToken = ++preloadQueueToken;
       preloadDebounceTimer = setTimeout(async () => {
         if (myToken !== preloadQueueToken) return;
         if (PAGES[startPageIdx]?.audio && (!customApiKeyInput || !customApiKeyInput.value.trim())) return;
         try {
-          await fetchGeminiTtsPage(startPageIdx);
+          await fetchGeminiTtsPage(startPageIdx, null, true);
         } catch (e) {}
-      }, 650);
+      }, 1000);
     }
 
     function updateCacheHint() {
@@ -851,9 +866,14 @@
           const ttsData = await fetchGeminiTtsPage(currentPageIndex);
           if (!isReading || mySession !== readSessionId) return;
 
-          // Prefetch next page in the background while current page plays
+          // Prefetch next page gently after 2s while current page plays to respect Preview TTS RPM limits
           if (currentPageIndex + 1 < PAGES.length) {
-            fetchGeminiTtsPage(currentPageIndex + 1).catch(() => {});
+            const nextIdx = currentPageIndex + 1;
+            setTimeout(() => {
+              if (isReading && mySession === readSessionId) {
+                fetchGeminiTtsPage(nextIdx, null, true).catch(() => {});
+              }
+            }, 2000);
           }
 
           isGeneratingAudio = false;
