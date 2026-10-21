@@ -342,12 +342,11 @@
           : apiKey;
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${activeKey}`;
         const rawText = customText || (PAGES[pageIdx]?.sentences || []).join(" ");
-        const ttsPrompt = `請維持同一位溫柔台灣故事媽媽的穩定聲線、固定音高與平穩吐字，以流暢自然的正常語速朗讀。遇到引號對話時請保持同一個人的音色，僅微調語氣，不要誇張變聲：${rawText}`;
+        const ttsPrompt = `請用溫柔自然的台灣故事媽媽語氣朗讀：${rawText}`;
 
         const payload = {
           contents: [{ parts: [{ text: ttsPrompt }] }],
           generationConfig: {
-            temperature: 0.3,
             responseModalities: ["AUDIO"],
             speechConfig: {
               voiceConfig: {
@@ -358,16 +357,20 @@
         };
 
         let lastErr = null;
-        for (let attempt = 0; attempt < 3; attempt++) {
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 9000);
           try {
             if (attempt > 0) {
-              await new Promise(r => setTimeout(r, 600 * attempt));
+              await new Promise(r => setTimeout(r, 1200));
             }
             const resp = await fetch(endpoint, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
+              body: JSON.stringify(payload),
+              signal: controller.signal
             });
+            clearTimeout(timeoutId);
 
             if (!resp.ok) {
               throw new Error(`HTTP ${resp.status}`);
@@ -402,6 +405,7 @@
             updateCacheHint();
             return resultObj;
           } catch (err) {
+            clearTimeout(timeoutId);
             lastErr = err;
           }
         }
@@ -520,20 +524,19 @@
       }
     }
 
-    // Sequentially preload current page + next page in background
-    async function preloadUpcomingPages(startPageIdx) {
+    // Debounced single-page preload to avoid hitting Gemini Preview TTS RPM rate limits on rapid page swipes
+    let preloadDebounceTimer = null;
+    function preloadUpcomingPages(startPageIdx) {
       if (selectedEngine !== "gemini-tts") return;
+      if (preloadDebounceTimer) clearTimeout(preloadDebounceTimer);
       const myToken = ++preloadQueueToken;
-      const maxPreload = Math.min(PAGES.length, startPageIdx + 2);
-      for (let idx = startPageIdx; idx < maxPreload; idx++) {
+      preloadDebounceTimer = setTimeout(async () => {
         if (myToken !== preloadQueueToken) return;
-        if (PAGES[idx]?.audio && (!customApiKeyInput || !customApiKeyInput.value.trim())) continue;
+        if (PAGES[startPageIdx]?.audio && (!customApiKeyInput || !customApiKeyInput.value.trim())) return;
         try {
-          await fetchGeminiTtsPage(idx);
-        } catch (e) {
-          return;
-        }
-      }
+          await fetchGeminiTtsPage(startPageIdx);
+        } catch (e) {}
+      }, 650);
     }
 
     function updateCacheHint() {
