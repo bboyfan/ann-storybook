@@ -1,7 +1,6 @@
 ---
 name: ann-storybook
-description: Create interactive, mobile-friendly 3D illustrated children's bedtime audio storybooks (HTML web app in Canvas or standalone local HTML with embedded neural zh-TW audio, plus optional printable PDF) with consistent character illustrations, award-winning picture-book prose, visual subplots, page-turn cliffhangers, unified-voice Taiwan Mandarin (zh-TW) narration, automatic page turning, parent voice recording, and offline zh-TW speech fallback. Use when the user mentions "Ann Storybook", asks to create a children's picture book, bedtime story, audio storybook, 有聲繪本, 兒童繪本, 睡前故事, or interactive story web app.
-allowed-tools: image_gen google default_api
+description: "Create interactive, mobile-friendly 3D illustrated children's bedtime audio storybooks (HTML web app) with consistent character illustrations, award-winning picture-book prose, visual subplots, and natural Taiwan Mandarin (zh-TW) narration. Use when the user asks to create a picture book, bedtime story, audio storybook, 有聲繪本, 兒童繪本, 睡前故事, or interactive story web app."
 ---
 
 # Ann Storybook (v2.0 — Picture-Book Master Edition)
