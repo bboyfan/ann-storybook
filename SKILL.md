@@ -78,6 +78,6 @@ description: "製作兒童互動有聲繪本（HTML Web App）。支援自訂或
 
 ### 第五步：語音朗讀與交付
 
-- **Gemini Web Canvas 環境**：保留模板預設 `const apiKey = "";`，由環境自動串接 `gemini-2.5-flash-preview-tts` 進行溫柔的台灣國語朗讀。
+- **Gemini Web Canvas 環境**：保留模板預設 `const apiKey = "";`，由環境自動串接 `gemini-2.5-flash-preview-tts` 進行溫柔的台灣國語朗讀（模板已優化純淨端點 URL 與 postMessage 相容性，無須填 Key 即可自動以 Canvas 憑證順暢朗讀）。
 - **本機端環境**：可由本機 Agent 預先合成台灣自然語音（如 `zh-TW-HsiaoChenNeural`）並以 Base64 填入 `PAGES[i].audio`，實現離線免金鑰秒播。
 - 介面同時內建家長麥克風錄音與系統語音備援。完成後輸出 `<故事名稱>_手機有聲繪本.html` 並開啟呈現給使用者。

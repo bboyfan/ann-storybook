@@ -341,10 +341,12 @@
       }
 
       const requestPromise = (async () => {
-        const activeKey = (customApiKeyInput && customApiKeyInput.value.trim())
+        const customKey = (customApiKeyInput && customApiKeyInput.value.trim())
           ? customApiKeyInput.value.trim()
-          : apiKey;
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${activeKey}`;
+          : "";
+        const activeKey = customKey || apiKey || "";
+        const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent";
+        const endpoint = activeKey ? `${baseUrl}?key=${encodeURIComponent(activeKey)}` : baseUrl;
         const rawText = customText || (PAGES[pageIdx]?.sentences || []).join(" ");
         const ttsPrompt = `請用溫柔自然的台灣故事媽媽語氣朗讀：${rawText}`;
 
@@ -360,14 +362,13 @@
           }
         };
 
-        // Single attempt with hard Promise.race timeout (7.5s) so Canvas postMessage bridge queues never hang for minutes
-        const controller = new AbortController();
+        // Single attempt with hard Promise.race timeout (18s)
+        // Note: Do NOT pass AbortSignal into fetch() because Canvas iframe postMessage bridge throws DataCloneError
         let timeoutId = null;
         const timeoutPromise = new Promise((_, reject) => {
           timeoutId = setTimeout(() => {
-            controller.abort();
             reject(new Error("TTS request timed out"));
-          }, 7500);
+          }, 18000);
         });
 
         try {
@@ -375,8 +376,7 @@
             fetch(endpoint, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-              signal: controller.signal
+              body: JSON.stringify(payload)
             }),
             timeoutPromise
           ]);
@@ -419,9 +419,7 @@
           return resultObj;
         } catch (err) {
           clearTimeout(timeoutId);
-          if (err && String(err.message).includes("timed out")) {
-            ttsCooldownUntil = Date.now() + 15000;
-          }
+          console.warn("[Gemini TTS Error]", err);
           throw err || new Error("TTS failed");
         }
       })();
@@ -892,8 +890,12 @@
           return;
         } catch (err) {
           if (!isReading || mySession !== readSessionId) return;
+          console.warn("[startReadingPage TTS Error]", err);
           isGeneratingAudio = false;
           syncControlButtons();
+          if (statusHint) {
+            statusHint.textContent = "💡 連線或金鑰未就緒，已切換至系統離線語音";
+          }
           startWebSpeechFallback(startIdx, mySession);
           return;
         }
@@ -1178,7 +1180,9 @@
             playAudioElementUrl(ttsData.wavBlobUrl, 0, mySession, onTestEnd);
           }
           return;
-        } catch (e) {}
+        } catch (e) {
+          console.warn("[testVoiceBtn TTS Error]", e);
+        }
       }
       if (!("speechSynthesis" in window)) return;
       const utter = new SpeechSynthesisUtterance(sampleLine);
