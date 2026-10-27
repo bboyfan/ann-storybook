@@ -205,7 +205,7 @@
       return URL.createObjectURL(new Blob([buffer], { type: "audio/wav" }));
     }
 
-    function fetchGeminiTtsPage(pageIdx, customText = null, uiWaitMs = 15000) {
+    function fetchGeminiTtsPage(pageIdx, customText = null, uiWaitMs = 12000) {
       const cacheKey = customText ? `custom_${customText}` : `page_${pageIdx}`;
       if (geminiPcmCache[cacheKey]) return Promise.resolve(geminiPcmCache[cacheKey]);
       if (Date.now() < ttsCooldownUntil) return Promise.reject(new Error("TTS cooldown active"));
@@ -544,7 +544,7 @@
         isGeneratingAudio = false;
         syncControlButtons();
         const fractions = getSentenceFractions(currentPageObj.sentences);
-        const estDuration = currentPageObj.durationSec || 12.5;
+        const estDuration = currentPageObj.durationSec || 10.5;
         const startOffsetSec = estDuration * (fractions[startIdx] || 0);
         scheduleSentenceHighlights(currentPageObj.sentences, estDuration, startIdx, startOffsetSec, mySession);
         playAudioElementUrl(currentPageObj.audio, startOffsetSec, mySession, () => handlePageFinished(mySession));
