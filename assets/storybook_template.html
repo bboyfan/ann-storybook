@@ -15,7 +15,7 @@
       overscroll-behavior-x: none;
     }
     .sentence-item {
-      transition: background-color 0.2s ease, color 0.2s ease;
+      transition: background-color 0.25s ease, color 0.25s ease, transform 0.2s ease;
       border-radius: 0.75rem;
       padding: 0.35rem 0.6rem;
       margin: 0 -0.4rem;
@@ -49,9 +49,6 @@
         <span class="w-7 h-7 rounded-full bg-black/35 backdrop-blur-sm border border-white/15 text-white/85 flex items-center justify-center text-sm">›</span>
       </button>
       <div class="absolute bottom-3 right-3 z-20 flex items-center gap-2">
-        <button id="quickModeBtn" type="button" class="h-9 px-2.5 rounded-full bg-black/55 hover:bg-black/75 active:scale-95 backdrop-blur-md text-[#EDE4D7] border border-white/15 flex items-center gap-1 text-[11px] shadow-lg transition" title="切換 Leda AI 語音 / 內建秒播語音">
-          <span id="quickModeLabel">✨ AI語音</span>
-        </button>
         <button id="voiceInfoBtn" type="button" class="w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 active:scale-95 backdrop-blur-md text-[#EDE4D7] border border-white/15 flex items-center justify-center text-sm shadow-lg transition" title="語音與爸媽錄音設定">🎙️</button>
         <button id="playToggleBtn" type="button" class="bg-amber-400/95 hover:bg-amber-300 active:scale-95 text-[#1C1714] font-bold text-xs px-3.5 py-2 rounded-full shadow-lg flex items-center gap-1.5 transition backdrop-blur-md">
           <span id="playToggleIcon">🔊</span>
@@ -62,7 +59,7 @@
 
     <section id="storyTextCard" class="bg-[#1F1A16] rounded-3xl px-5 py-4 border border-[#2E2621] shadow-inner">
       <h2 id="pageTitle" class="sr-only"></h2>
-      <div id="storySentences" class="text-[17px] sm:text-[19px] leading-[1.7] text-[#EDE4D7] space-y-2 font-normal"></div>
+      <div id="storySentences" class="text-[18px] sm:text-[20px] leading-[1.75] text-[#EDE4D7] space-y-2.5 font-normal"></div>
       <div class="mt-2.5 pt-2 border-t border-[#2E2621]/60 flex items-center justify-between text-[11px] text-[#9E9183]">
         <span id="statusHint">左右滑動翻頁・點文字可從該段朗讀</span>
         <span id="cacheDot" class="text-[#9E9183]"></span>
@@ -122,6 +119,7 @@
   </div>
 
   <script>
+    // In Gemini Canvas runtime, keeping apiKey = "" allows Canvas to inject credentials automatically
     const apiKey = "";
     const VOICE_NAME = "Leda";
     const PAGES = __PAGES_JSON_PLACEHOLDER__;
@@ -158,8 +156,8 @@
           pageTitle = $("pageTitle"), storySentences = $("storySentences"), statusHint = $("statusHint"),
           cacheDot = $("cacheDot"), readingIndicator = $("readingIndicator"), readingIndicatorText = $("readingIndicatorText"),
           playToggleBtn = $("playToggleBtn"), playToggleIcon = $("playToggleIcon"), playToggleLabel = $("playToggleLabel"),
-          prevPageBtn = $("prevPageBtn"), nextPageBtn = $("nextPageBtn"), quickModeBtn = $("quickModeBtn"),
-          quickModeLabel = $("quickModeLabel"), voiceInfoBtn = $("voiceInfoBtn"), voiceModal = $("voiceModal"),
+          prevPageBtn = $("prevPageBtn"), nextPageBtn = $("nextPageBtn"),
+          voiceInfoBtn = $("voiceInfoBtn"), voiceModal = $("voiceModal"),
           closeVoiceModalBtn = $("closeVoiceModalBtn"), confirmVoiceModalBtn = $("confirmVoiceModalBtn"),
           engineSelect = $("engineSelect"), customApiKeyInput = $("customApiKeyInput"),
           downloadWavBtn = $("downloadWavBtn"), recordPageNumLabel = $("recordPageNumLabel"), recordBtn = $("recordBtn"),
@@ -205,7 +203,15 @@
       return URL.createObjectURL(new Blob([buffer], { type: "audio/wav" }));
     }
 
-    function fetchGeminiTtsPage(pageIdx, customText = null, uiWaitMs = 12000) {
+    function ensureWavBlobUrl(ttsData) {
+      if (!ttsData.wavBlobUrl && ttsData.base64Data) {
+        const binaryString = window.atob(ttsData.base64Data);
+        ttsData.wavBlobUrl = pcm16BinaryToWavBlobUrl(binaryString, ttsData.sampleRate || 24000, 1);
+      }
+      return ttsData.wavBlobUrl;
+    }
+
+    function fetchGeminiTtsPage(pageIdx, customText = null, uiWaitMs = 11000) {
       const cacheKey = customText ? `custom_${customText}` : `page_${pageIdx}`;
       if (geminiPcmCache[cacheKey]) return Promise.resolve(geminiPcmCache[cacheKey]);
       if (Date.now() < ttsCooldownUntil) return Promise.reject(new Error("TTS cooldown active"));
@@ -217,10 +223,12 @@
           const activeKey = customKey || apiKey || "";
           const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent";
           const endpoint = activeKey ? `${baseUrl}?key=${encodeURIComponent(activeKey)}` : baseUrl;
-          const rawText = customText || (PAGES[pageIdx]?.sentences || []).join("，");
+          const rawText = customText || (PAGES[pageIdx]?.sentences || []).join(" ");
+          const ttsPrompt = `請用自然親切的台灣國語口音，維持穩定溫柔聲線，以流暢自然的正常語速朗讀：${rawText}`;
           const payload = {
-            contents: [{ parts: [{ text: `台灣溫柔甜美故事姊姊語氣朗讀：${rawText}` }] }],
+            contents: [{ parts: [{ text: ttsPrompt }] }],
             generationConfig: {
+              temperature: 0.3,
               responseModalities: ["AUDIO"],
               speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: VOICE_NAME } } }
             }
@@ -245,9 +253,15 @@
           if (m) sampleRate = parseInt(m[1], 10);
 
           const binaryString = window.atob(audioPart.inlineData.data);
-          const durationSec = Math.floor(binaryString.length / 2) / sampleRate;
-          const wavBlobUrl = pcm16BinaryToWavBlobUrl(binaryString, sampleRate, 1);
-          const resultObj = { base64Data: audioPart.inlineData.data, sampleRate, durationSec, wavBlobUrl };
+          const numSamples = Math.floor(binaryString.length / 2);
+          const floatSamples = new Float32Array(numSamples);
+          for (let i = 0; i < numSamples; i++) {
+            let sample = (binaryString.charCodeAt(i * 2 + 1) << 8) | binaryString.charCodeAt(i * 2);
+            if (sample >= 0x8000) sample -= 0x10000;
+            floatSamples[i] = Math.max(-1, Math.min(1, (sample / 32768.0) * 1.15));
+          }
+          const durationSec = numSamples / sampleRate;
+          const resultObj = { base64Data: audioPart.inlineData.data, floatSamples, sampleRate, durationSec, wavBlobUrl: null };
           geminiPcmCache[cacheKey] = resultObj;
           updateCacheHint();
           return resultObj;
@@ -315,17 +329,11 @@
         if (!ctx) return false;
         if (ctx.state === "suspended") ctx.resume().catch(() => {});
 
-        const binaryString = window.atob(ttsData.base64Data);
-        const numSamples = Math.floor(binaryString.length / 2);
-        if (numSamples < 80) return false;
+        const samples = ttsData.floatSamples;
+        if (!samples || samples.length < 80) return false;
 
-        const audioBuffer = ctx.createBuffer(1, numSamples, ttsData.sampleRate || 24000);
-        const channelData = audioBuffer.getChannelData(0);
-        for (let i = 0; i < numSamples; i++) {
-          let sample = (binaryString.charCodeAt(i * 2 + 1) << 8) | binaryString.charCodeAt(i * 2);
-          if (sample >= 0x8000) sample -= 0x10000;
-          channelData[i] = Math.max(-1, Math.min(1, (sample / 32768.0) * 1.15));
-        }
+        const audioBuffer = ctx.createBuffer(1, samples.length, ttsData.sampleRate || 24000);
+        audioBuffer.getChannelData(0).set(samples);
 
         stopActiveWebAudioSource();
         const source = ctx.createBufferSource();
@@ -348,32 +356,20 @@
       }
     }
 
-    function syncQuickModeUI() {
-      if (!quickModeLabel) return;
-      if (selectedEngine === "web-speech") {
-        quickModeLabel.textContent = "⚡ 內建秒播";
-      } else if (selectedEngine === "parent-record") {
-        quickModeLabel.textContent = "❤️ 爸媽語音";
-      } else {
-        quickModeLabel.textContent = "✨ AI語音";
-      }
-      if (engineSelect && engineSelect.value !== selectedEngine) engineSelect.value = selectedEngine;
-    }
-
     function updateCacheHint() {
-      syncQuickModeUI();
+      if (engineSelect && engineSelect.value !== selectedEngine) engineSelect.value = selectedEngine;
       const pageKey = `page_${currentPageIndex}`;
       if (!cacheDot) return;
       if (parentAudioCache[currentPageIndex]) {
         cacheDot.textContent = "❤️ 爸媽錄音已就緒";
       } else if (PAGES[currentPageIndex]?.audio && (!customApiKeyInput || !customApiKeyInput.value.trim())) {
-        cacheDot.textContent = "✨ 台灣自然語音已內嵌（秒播）";
+        cacheDot.textContent = "✨ 台灣自然語音已就緒";
       } else if (selectedEngine === "web-speech") {
-        cacheDot.textContent = "⚡ 內建台灣語音（0秒即念）";
+        cacheDot.textContent = "⚡ 內建台灣語音";
       } else if (geminiPcmCache[pageKey]) {
-        cacheDot.textContent = "✨ 本頁 Leda 語音已就緒（秒播）";
+        cacheDot.textContent = "✨ 語音已就緒";
       } else if (inflightRequests[pageKey]) {
-        cacheDot.textContent = "⏳ 背景預載 Leda 語音中...";
+        cacheDot.textContent = "⏳ 預載語音中...";
       } else {
         cacheDot.textContent = "";
       }
@@ -445,7 +441,7 @@
       if (isReading) {
         readingIndicator.classList.remove("hidden");
         if (isGeneratingAudio) {
-          readingIndicatorText.textContent = "Leda 語音準備中（點左鈕可秒播）";
+          readingIndicatorText.textContent = "準備語音中...";
           playToggleIcon.textContent = "⏳";
           playToggleLabel.textContent = "讀取中";
           playToggleBtn.className = "bg-amber-300/95 text-[#1C1714] font-bold text-xs px-3.5 py-2 rounded-full shadow-lg flex items-center gap-1.5 transition backdrop-blur-md";
@@ -578,14 +574,13 @@
           scheduleSentenceHighlights(page.sentences, ttsData.durationSec || 0, startIdx, startOffsetSec, mySession);
 
           if (!playPcmViaWebAudio(ttsData, startOffsetSec, mySession, () => handlePageFinished(mySession))) {
-            playAudioElementUrl(ttsData.wavBlobUrl, startOffsetSec, mySession, () => handlePageFinished(mySession));
+            playAudioElementUrl(ensureWavBlobUrl(ttsData), startOffsetSec, mySession, () => handlePageFinished(mySession));
           }
           return;
         } catch (err) {
           if (!isReading || mySession !== readSessionId) return;
           isGeneratingAudio = false;
           syncControlButtons();
-          if (statusHint) statusHint.textContent = "⚡ 已自動切換內建台灣語音秒播（背景持續快取 Leda 語音）";
           startWebSpeechFallback(startIdx, mySession);
           return;
         }
@@ -621,7 +616,7 @@
       if (!bestTaiwanVoice && "speechSynthesis" in window) refreshVoices();
       if (bestTaiwanVoice) { utter.voice = bestTaiwanVoice; utter.lang = bestTaiwanVoice.lang || "zh-TW"; }
       else { utter.lang = "zh-TW"; }
-      utter.rate = 0.96;
+      utter.rate = 1.0;
 
       let startedSpeaking = false;
       const watchdog = setTimeout(() => {
@@ -669,19 +664,6 @@
       if (isReading) stopReading(); else startReadingPage(0, true);
     });
 
-    quickModeBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      unlockAudioOnUserGesture();
-      selectedEngine = selectedEngine === "gemini-tts" ? "web-speech" : "gemini-tts";
-      updateCacheHint();
-      if (statusHint) {
-        statusHint.textContent = selectedEngine === "web-speech"
-          ? "⚡ 已切換為「內建台灣語音」：0 秒等待、即點即念"
-          : "✨ 已切換為「Leda AI 台灣語音」";
-      }
-      if (isReading) startReadingPage(Math.max(0, currentSentenceIndex), true);
-    });
-
     voiceInfoBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       unlockAudioOnUserGesture();
@@ -719,7 +701,7 @@
         downloadWavBtn.disabled = true;
         const ttsData = await fetchGeminiTtsPage(currentPageIndex, null, 35000);
         const a = document.createElement("a");
-        a.href = ttsData.wavBlobUrl;
+        a.href = ensureWavBlobUrl(ttsData);
         a.download = `有聲繪本_第${currentPageIndex + 1}頁_台灣語音.wav`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         downloadWavBtn.textContent = "✅ 已下載";
@@ -782,11 +764,11 @@
       const sampleLine = "咚咚咚！猜猜看，今天是誰要一起聽故事呀？";
       if (selectedEngine === "gemini-tts") {
         try {
-          const ttsData = await fetchGeminiTtsPage(0, sampleLine, 12000);
+          const ttsData = await fetchGeminiTtsPage(0, sampleLine, 11000);
           isReading = true;
           const mySession = ++readSessionId;
           const onEnd = () => { isReading = false; syncControlButtons(); };
-          if (!playPcmViaWebAudio(ttsData, 0, mySession, onEnd)) playAudioElementUrl(ttsData.wavBlobUrl, 0, mySession, onEnd);
+          if (!playPcmViaWebAudio(ttsData, 0, mySession, onEnd)) playAudioElementUrl(ensureWavBlobUrl(ttsData), 0, mySession, onEnd);
           return;
         } catch (e) {}
       }
@@ -795,7 +777,7 @@
       window._activeBedtimeUtterance = utter;
       if (!bestTaiwanVoice) refreshVoices();
       if (bestTaiwanVoice) { utter.voice = bestTaiwanVoice; utter.lang = bestTaiwanVoice.lang || "zh-TW"; } else { utter.lang = "zh-TW"; }
-      utter.rate = 0.96;
+      utter.rate = 1.0;
       window.speechSynthesis.speak(utter);
     });
 
@@ -803,7 +785,7 @@
     if (!PAGES[0]?.audio) {
       fetchGeminiTtsPage(0).then(() => {
         if (PAGES.length > 1 && !PAGES[1]?.audio) {
-          setTimeout(() => fetchGeminiTtsPage(1).catch(() => {}), 1200);
+          setTimeout(() => fetchGeminiTtsPage(1).catch(() => {}), 1000);
         }
       }).catch(() => {});
     }
