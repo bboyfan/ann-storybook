@@ -25,31 +25,56 @@
       background: rgba(245, 158, 11, 0.18);
       color: #FDE68A;
     }
-    .edge-nav-btn { opacity: 0.55; transition: opacity 0.2s ease, transform 0.15s ease; }
-    .edge-nav-btn:active { opacity: 0.95; transform: scale(0.92); }
-    .edge-nav-btn:disabled { opacity: 0; pointer-events: none; }
+    .edge-nav-btn {
+      opacity: 0.55;
+      transition: opacity 0.2s ease, transform 0.15s ease;
+    }
+    .edge-nav-btn:active {
+      opacity: 0.95;
+      transform: scale(0.92);
+    }
+    .edge-nav-btn:disabled {
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-[#14110F] text-[#EDE4D7] flex flex-col items-center justify-start px-2.5 pt-2 pb-16 sm:px-4 sm:py-4 select-none">
+
+  <!-- Portrait Storybook Container: Large Vertical Illustration + Direct Story Text -->
   <main id="storybookMain" class="w-full max-w-md flex flex-col gap-2.5">
+
+    <!-- Large Vertical 3:4 Illustration Card (Occupies ~55-60% of phone screen) -->
     <div id="illustrationBox" class="relative w-full aspect-[3/4] max-h-[58vh] sm:max-h-[62vh] rounded-3xl overflow-hidden shadow-2xl border border-[#2E2621] bg-[#1C1714]">
       <img id="pageImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="繪本插圖" class="w-full h-full object-cover block select-none pointer-events-none">
+
+      <!-- Subtle bottom gradient for corner button legibility -->
       <div class="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/55 via-black/15 to-transparent pointer-events-none"></div>
+
+      <!-- Top-Left: Minimal Page Badge & Reading Indicator -->
       <div class="absolute top-3 left-3 z-10 flex items-center gap-2 pointer-events-none">
-        <span id="pageBadge" class="bg-black/45 backdrop-blur-md text-[#EDE4D7]/90 text-xs font-medium px-2.5 py-1 rounded-full border border-white/10 tabular-nums">1 / 10</span>
+        <span id="pageBadge" class="bg-black/45 backdrop-blur-md text-[#EDE4D7]/90 text-xs font-medium px-2.5 py-1 rounded-full border border-white/10 tabular-nums">
+          1 / 10
+        </span>
         <div id="readingIndicator" class="hidden bg-black/60 backdrop-blur-md text-amber-300 text-xs font-medium px-2.5 py-1 rounded-full border border-amber-400/30 flex items-center gap-1.5">
           <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
           <span id="readingIndicatorText">朗讀中</span>
         </div>
       </div>
+
+      <!-- Left & Right Edge Tap Zones for One-Handed Page Turning -->
       <button id="prevPageBtn" type="button" aria-label="上一頁" class="edge-nav-btn absolute inset-y-12 left-0 w-14 z-10 flex items-center justify-start pl-2 focus:outline-none">
         <span class="w-7 h-7 rounded-full bg-black/35 backdrop-blur-sm border border-white/15 text-white/85 flex items-center justify-center text-sm">‹</span>
       </button>
       <button id="nextPageBtn" type="button" aria-label="下一頁" class="edge-nav-btn absolute inset-y-12 right-0 w-14 z-10 flex items-center justify-end pr-2 focus:outline-none">
         <span class="w-7 h-7 rounded-full bg-black/35 backdrop-blur-sm border border-white/15 text-white/85 flex items-center justify-center text-sm">›</span>
       </button>
+
+      <!-- Bottom-Right Floating Audio Controls (Unobtrusive & away from bottom-center system bar) -->
       <div class="absolute bottom-3 right-3 z-20 flex items-center gap-2">
-        <button id="voiceInfoBtn" type="button" class="w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 active:scale-95 backdrop-blur-md text-[#EDE4D7] border border-white/15 flex items-center justify-center text-sm shadow-lg transition" title="語音與爸媽錄音設定">🎙️</button>
+        <button id="voiceInfoBtn" type="button" class="w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 active:scale-95 backdrop-blur-md text-[#EDE4D7] border border-white/15 flex items-center justify-center text-sm shadow-lg transition" title="語音與錄音設定">
+          🎙️
+        </button>
         <button id="playToggleBtn" type="button" class="bg-amber-400/95 hover:bg-amber-300 active:scale-95 text-[#1C1714] font-bold text-xs px-3.5 py-2 rounded-full shadow-lg flex items-center gap-1.5 transition backdrop-blur-md">
           <span id="playToggleIcon">🔊</span>
           <span id="playToggleLabel">念故事</span>
@@ -57,6 +82,7 @@
       </div>
     </div>
 
+    <!-- Clean Story Text Card (Directly below image, comfortable reading size) -->
     <section id="storyTextCard" class="bg-[#1F1A16] rounded-3xl px-5 py-4 border border-[#2E2621] shadow-inner">
       <h2 id="pageTitle" class="sr-only"></h2>
       <div id="storySentences" class="text-[18px] sm:text-[20px] leading-[1.75] text-[#EDE4D7] space-y-2.5 font-normal"></div>
@@ -65,31 +91,49 @@
         <span id="cacheDot" class="text-[#9E9183]"></span>
       </div>
     </section>
+
+    <!-- Hidden native HTML5 Audio element for lightweight zero-CPU hardware playback -->
     <audio id="geminiAudioPlayer" preload="auto" playsinline class="hidden"></audio>
   </main>
 
+  <!-- Streamlined Taiwan Voice & Parent Recording Modal -->
   <div id="voiceModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-[#1F1A16] border border-[#382E28] rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 my-4 text-[#EDE4D7]">
       <div class="flex items-center justify-between">
         <h3 class="text-base font-bold text-amber-200">🎙️ 故事語音與爸媽錄音</h3>
         <button id="closeVoiceModalBtn" type="button" class="text-[#9E9183] hover:text-white text-lg font-bold px-2">✕</button>
       </div>
+
       <div class="space-y-3.5 text-sm leading-relaxed">
-        <div class="bg-[#29221D] rounded-2xl p-3.5 border border-[#382E28] space-y-2">
+        <!-- AI Voice Selection -->
+        <div class="bg-[#29221D] rounded-2xl p-3.5 border border-[#382E28] space-y-2.5">
           <div class="flex items-center justify-between">
-            <label for="engineSelect" class="font-semibold text-amber-200 text-xs sm:text-sm">朗讀模式：</label>
-            <select id="engineSelect" class="bg-[#181411] text-[#EDE4D7] text-xs rounded-xl px-2.5 py-1.5 border border-[#473B33] focus:outline-none">
-              <option value="gemini-tts">✨ Leda 柔和甜美台灣語音</option>
-              <option value="web-speech">⚡ 內建台灣語音（0秒秒播）</option>
-              <option value="parent-record">❤️ 優先播放爸媽錄音</option>
+            <label for="geminiVoiceSelect" class="font-semibold text-amber-200 text-xs sm:text-sm">✨ AI 說故事聲線：</label>
+            <select id="geminiVoiceSelect" class="bg-[#181411] text-amber-200 text-xs sm:text-sm rounded-xl px-2.5 py-1.5 border border-[#473B33] focus:outline-none">
+              <option value="Leda" selected>Leda（柔和甜美姊姊・預設）</option>
+              <option value="Kore">Kore（溫暖故事媽媽）</option>
+              <option value="Aoede">Aoede（親切自然女聲）</option>
+              <option value="Zephyr">Zephyr（清澈安定女聲）</option>
+              <option value="Puck">Puck（溫暖故事哥哥）</option>
             </select>
           </div>
-          <p class="text-[11px] text-[#B5A899]">預設採用 Leda 溫柔台灣語音朗讀；亦可切換內建秒播或錄下爸媽的聲音。</p>
+          <div class="flex items-center justify-between pt-1">
+            <label for="engineSelect" class="text-xs text-[#B5A899]">朗讀模式：</label>
+            <select id="engineSelect" class="bg-[#181411] text-[#EDE4D7] text-xs rounded-xl px-2.5 py-1.5 border border-[#473B33] focus:outline-none">
+              <option value="gemini-tts">✨ Gemini AI 自然台灣語音</option>
+              <option value="parent-record">❤️ 優先播放爸媽錄音</option>
+              <option value="web-speech">📱 手機內建語音（離線）</option>
+            </select>
+          </div>
         </div>
+
+        <!-- Parent Recording Section -->
         <div class="bg-[#29221D] rounded-2xl p-3.5 border border-[#382E28] space-y-2">
           <p class="font-semibold text-amber-200 text-xs sm:text-sm">❤️ 為「第 <span id="recordPageNumLabel">1</span> 頁」錄下爸媽聲音：</p>
           <div class="flex gap-2">
-            <button id="recordBtn" type="button" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-3 rounded-xl transition">⏺️ 開始錄音</button>
+            <button id="recordBtn" type="button" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-3 rounded-xl transition">
+              ⏺️ 開始錄音
+            </button>
             <label class="flex-1 bg-[#382E28] hover:bg-[#473B33] text-[#EDE4D7] text-xs font-semibold py-2 px-3 rounded-xl text-center cursor-pointer transition">
               📂 匯入音檔
               <input id="uploadAudioInput" type="file" accept="audio/*" class="hidden">
@@ -97,23 +141,39 @@
           </div>
           <p id="recordStatusText" class="text-[11px] text-emerald-300/90">錄音或匯入後，本頁會自動優先播放您的聲音。</p>
         </div>
+
+        <!-- Collapsible Advanced Settings (API Key, WAV Download, Fallback Voice) -->
         <details class="bg-[#241E1A] rounded-2xl px-3.5 py-2.5 border border-[#332A24] text-xs text-[#B5A899]">
-          <summary class="cursor-pointer font-medium text-[#D1C5B7] select-none">進階選項（下載音檔 / 外部金鑰）</summary>
+          <summary class="cursor-pointer font-medium text-[#D1C5B7] select-none">進階選項（下載音檔 / 備援設定）</summary>
           <div class="mt-3 space-y-3 pt-2 border-t border-[#332A24]">
             <div class="flex items-center justify-between">
-              <span>下載本頁 Leda 語音檔：</span>
-              <button id="downloadWavBtn" type="button" class="bg-[#382E28] hover:bg-[#473B33] text-amber-200 font-semibold px-2.5 py-1 rounded-lg border border-[#4D3F37]">⬇️ 下載 .wav</button>
+              <span>下載本頁 AI 語音檔：</span>
+              <button id="downloadWavBtn" type="button" class="bg-[#382E28] hover:bg-[#473B33] text-amber-200 font-semibold px-2.5 py-1 rounded-lg border border-[#4D3F37]">
+                ⬇️ 下載 .wav
+              </button>
             </div>
             <div>
               <label for="customApiKeyInput" class="block mb-1">選填 Gemini API Key（Canvas 內免填）：</label>
               <input id="customApiKeyInput" type="password" placeholder="預設自動帶入憑證" class="w-full bg-[#181411] text-[#EDE4D7] text-xs rounded-lg px-2.5 py-1.5 border border-[#382E28] focus:outline-none">
             </div>
+            <div>
+              <label for="voiceSelect" class="block mb-1">離線備援系統聲線（zh-TW）：</label>
+              <select id="voiceSelect" class="w-full bg-[#181411] text-[#EDE4D7] text-xs rounded-lg px-2.5 py-1.5 border border-[#382E28] focus:outline-none">
+                <option value="auto-tw">自動鎖定台灣國語 (zh-TW)</option>
+              </select>
+              <p id="detectedVoiceNote" class="text-[11px] text-emerald-300/80 mt-1"></p>
+            </div>
           </div>
         </details>
       </div>
+
       <div class="flex gap-2 pt-1">
-        <button id="testVoiceBtn" type="button" class="flex-1 bg-amber-400 hover:bg-amber-300 text-[#1C1714] font-bold py-2.5 px-4 rounded-xl text-sm transition">🔊 試聽聲音</button>
-        <button id="confirmVoiceModalBtn" type="button" class="bg-[#2E2621] hover:bg-[#382E28] text-[#EDE4D7] font-semibold py-2.5 px-5 rounded-xl border border-[#473B33] text-sm transition">完成</button>
+        <button id="testVoiceBtn" type="button" class="flex-1 bg-amber-400 hover:bg-amber-300 text-[#1C1714] font-bold py-2.5 px-4 rounded-xl text-sm transition">
+          🔊 試聽聲音
+        </button>
+        <button id="confirmVoiceModalBtn" type="button" class="bg-[#2E2621] hover:bg-[#382E28] text-[#EDE4D7] font-semibold py-2.5 px-5 rounded-xl border border-[#473B33] text-sm transition">
+          完成
+        </button>
       </div>
     </div>
   </div>
@@ -121,279 +181,424 @@
   <script>
     // In Gemini Canvas runtime, keeping apiKey = "" allows Canvas to inject credentials automatically
     const apiKey = "";
-    const VOICE_NAME = "Leda";
+
+    // Replace __PAGES_JSON_PLACEHOLDER__ with the generated array of 9-13 page objects:
+    // [{ pageNum: 1, badge: "1 / 10", title: "...", img: "data:image/jpeg;base64,...", sentences: ["...", "..."] }, ...]
     const PAGES = __PAGES_JSON_PLACEHOLDER__;
 
+    // State
     let currentPageIndex = 0;
     let currentSentenceIndex = -1;
     let isReading = false;
     let isGeneratingAudio = false;
     let isAutoBedtime = true;
-    let selectedEngine = "gemini-tts";
+    let selectedEngine = "gemini-tts"; // 'gemini-tts' | 'parent-record' | 'web-speech'
+    let selectedGeminiVoice = "Leda";
+    let selectedVoiceURI = "auto-tw";
+    let availableVoices = [];
     let bestTaiwanVoice = null;
     let keepAliveInterval = null;
     let nextSentenceTimeout = null;
-    let preloadDebounceTimer = null;
     let sentenceHighlightTimers = [];
     let readSessionId = 0;
 
-    const geminiPcmCache = {};
-    const inflightRequests = {};
-    const parentAudioCache = {};
-    let ttsQueueChain = Promise.resolve();
-    let ttsCooldownUntil = 0;
+    // Cache structures (Memory cache)
+    const geminiPcmCache = {};   // key: `page_${pageIdx}_${voiceName}` -> { base64Data, sampleRate, durationSec, wavBlobUrl }
+    const inflightRequests = {}; // key -> Promise
+    const parentAudioCache = {}; // pageIndex -> blobURL
     let mediaRecorder = null;
     let recordedChunks = [];
     let isRecordingNow = false;
 
     window._activeBedtimeUtterance = null;
-    window._bedtimeAudioCtx = null;
-    window._activeAudioSource = null;
     window._htmlAudioUnlocked = false;
 
-    const $ = (id) => document.getElementById(id);
-    const storybookMain = $("storybookMain"), pageBadge = $("pageBadge"), pageImage = $("pageImage"),
-          pageTitle = $("pageTitle"), storySentences = $("storySentences"), statusHint = $("statusHint"),
-          cacheDot = $("cacheDot"), readingIndicator = $("readingIndicator"), readingIndicatorText = $("readingIndicatorText"),
-          playToggleBtn = $("playToggleBtn"), playToggleIcon = $("playToggleIcon"), playToggleLabel = $("playToggleLabel"),
-          prevPageBtn = $("prevPageBtn"), nextPageBtn = $("nextPageBtn"),
-          voiceInfoBtn = $("voiceInfoBtn"), voiceModal = $("voiceModal"),
-          closeVoiceModalBtn = $("closeVoiceModalBtn"), confirmVoiceModalBtn = $("confirmVoiceModalBtn"),
-          engineSelect = $("engineSelect"), customApiKeyInput = $("customApiKeyInput"),
-          downloadWavBtn = $("downloadWavBtn"), recordPageNumLabel = $("recordPageNumLabel"), recordBtn = $("recordBtn"),
-          uploadAudioInput = $("uploadAudioInput"), recordStatusText = $("recordStatusText"),
-          testVoiceBtn = $("testVoiceBtn"), geminiAudioPlayer = $("geminiAudioPlayer");
+    // Persistent Audio Cache via IndexedDB for instant 0-second loading on revisit
+    const DB_NAME = "AnnStorybookCache";
+    const DB_STORE = "audio_cache";
+    let _indexedDbPromise = null;
 
-    function unlockAudioOnUserGesture() {
-      try {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (AC) {
-          if (!window._bedtimeAudioCtx) window._bedtimeAudioCtx = new AC();
-          if (window._bedtimeAudioCtx.state === "suspended") window._bedtimeAudioCtx.resume().catch(() => {});
-          const silentBuf = window._bedtimeAudioCtx.createBuffer(1, 1, 22050);
-          const silentSrc = window._bedtimeAudioCtx.createBufferSource();
-          silentSrc.buffer = silentBuf;
-          silentSrc.connect(window._bedtimeAudioCtx.destination);
-          silentSrc.start(0);
+    function getAudioDb() {
+      if (_indexedDbPromise) return _indexedDbPromise;
+      _indexedDbPromise = new Promise((resolve) => {
+        if (!("indexedDB" in window)) return resolve(null);
+        try {
+          const req = indexedDB.open(DB_NAME, 1);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(DB_STORE)) {
+              db.createObjectStore(DB_STORE, { keyPath: "key" });
+            }
+          };
+          req.onsuccess = (e) => resolve(e.target.result);
+          req.onerror = () => resolve(null);
+        } catch (e) {
+          resolve(null);
         }
+      });
+      return _indexedDbPromise;
+    }
+
+    async function loadAudioFromDb(key) {
+      try {
+        const db = await getAudioDb();
+        if (!db) return null;
+        return new Promise((resolve) => {
+          const tx = db.transaction(DB_STORE, "readonly");
+          const store = tx.objectStore(DB_STORE);
+          const req = store.get(key);
+          req.onsuccess = () => resolve(req.result ? req.result.data : null);
+          req.onerror = () => resolve(null);
+        });
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function saveAudioToDb(key, data) {
+      try {
+        const db = await getAudioDb();
+        if (!db) return;
+        const tx = db.transaction(DB_STORE, "readwrite");
+        const store = tx.objectStore(DB_STORE);
+        store.put({ key, data });
       } catch (e) {}
+    }
+
+    // DOM Elements
+    const storybookMain = document.getElementById("storybookMain");
+    const pageBadge = document.getElementById("pageBadge");
+    const pageImage = document.getElementById("pageImage");
+    const pageTitle = document.getElementById("pageTitle");
+    const storySentences = document.getElementById("storySentences");
+    const statusHint = document.getElementById("statusHint");
+    const cacheDot = document.getElementById("cacheDot");
+    const readingIndicator = document.getElementById("readingIndicator");
+    const readingIndicatorText = document.getElementById("readingIndicatorText");
+    const playToggleBtn = document.getElementById("playToggleBtn");
+    const playToggleIcon = document.getElementById("playToggleIcon");
+    const playToggleLabel = document.getElementById("playToggleLabel");
+    const prevPageBtn = document.getElementById("prevPageBtn");
+    const nextPageBtn = document.getElementById("nextPageBtn");
+    const voiceInfoBtn = document.getElementById("voiceInfoBtn");
+    const voiceModal = document.getElementById("voiceModal");
+    const closeVoiceModalBtn = document.getElementById("closeVoiceModalBtn");
+    const confirmVoiceModalBtn = document.getElementById("confirmVoiceModalBtn");
+    const engineSelect = document.getElementById("engineSelect");
+    const geminiVoiceSelect = document.getElementById("geminiVoiceSelect");
+    const customApiKeyInput = document.getElementById("customApiKeyInput");
+    const downloadWavBtn = document.getElementById("downloadWavBtn");
+    const recordPageNumLabel = document.getElementById("recordPageNumLabel");
+    const recordBtn = document.getElementById("recordBtn");
+    const uploadAudioInput = document.getElementById("uploadAudioInput");
+    const recordStatusText = document.getElementById("recordStatusText");
+    const voiceSelect = document.getElementById("voiceSelect");
+    const detectedVoiceNote = document.getElementById("detectedVoiceNote");
+    const testVoiceBtn = document.getElementById("testVoiceBtn");
+    const geminiAudioPlayer = document.getElementById("geminiAudioPlayer");
+
+    // Unlock HTML5 Audio seamlessly inside user gesture
+    function unlockAudioOnUserGesture() {
       if (!window._htmlAudioUnlocked && geminiAudioPlayer) {
         try {
           geminiAudioPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
           const p = geminiAudioPlayer.play();
           if (p && typeof p.then === "function") {
-            p.then(() => { geminiAudioPlayer.pause(); geminiAudioPlayer.currentTime = 0; window._htmlAudioUnlocked = true; }).catch(() => {});
+            p.then(() => {
+              geminiAudioPlayer.pause();
+              geminiAudioPlayer.currentTime = 0;
+              window._htmlAudioUnlocked = true;
+            }).catch(() => {});
           }
         } catch (e) {}
       }
     }
 
+    // Convert raw PCM16 binary string to standard 44-byte WAV Blob URL
     function pcm16BinaryToWavBlobUrl(binaryString, sampleRate = 24000, numChannels = 1) {
       const dataSize = binaryString.length;
       const buffer = new ArrayBuffer(44 + dataSize);
       const view = new DataView(buffer);
-      const writeStr = (off, s) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
-      writeStr(0, "RIFF"); view.setUint32(4, 36 + dataSize, true); writeStr(8, "WAVE"); writeStr(12, "fmt ");
-      view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, numChannels, true);
-      view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * numChannels * 2, true);
-      view.setUint16(32, numChannels * 2, true); view.setUint16(34, 16, true); writeStr(36, "data");
+
+      const writeStr = (offset, str) => {
+        for (let i = 0; i < str.length; i++) {
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+      };
+
+      const bitsPerSample = 16;
+      const blockAlign = (numChannels * bitsPerSample) / 8;
+      const byteRate = sampleRate * blockAlign;
+
+      writeStr(0, "RIFF");
+      view.setUint32(4, 36 + dataSize, true);
+      writeStr(8, "WAVE");
+      writeStr(12, "fmt ");
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // PCM format
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, byteRate, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, bitsPerSample, true);
+      writeStr(36, "data");
       view.setUint32(40, dataSize, true);
+
       const bytes = new Uint8Array(buffer, 44);
-      for (let i = 0; i < dataSize; i++) bytes[i] = binaryString.charCodeAt(i);
-      return URL.createObjectURL(new Blob([buffer], { type: "audio/wav" }));
-    }
-
-    function ensureWavBlobUrl(ttsData) {
-      if (!ttsData.wavBlobUrl && ttsData.base64Data) {
-        const binaryString = window.atob(ttsData.base64Data);
-        ttsData.wavBlobUrl = pcm16BinaryToWavBlobUrl(binaryString, ttsData.sampleRate || 24000, 1);
+      for (let i = 0; i < dataSize; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
       }
-      return ttsData.wavBlobUrl;
+      const wavBlob = new Blob([buffer], { type: "audio/wav" });
+      return URL.createObjectURL(wavBlob);
     }
 
-    function fetchGeminiTtsPage(pageIdx, customText = null, uiWaitMs = 11000) {
-      const cacheKey = customText ? `custom_${customText}` : `page_${pageIdx}`;
-      if (geminiPcmCache[cacheKey]) return Promise.resolve(geminiPcmCache[cacheKey]);
-      if (Date.now() < ttsCooldownUntil) return Promise.reject(new Error("TTS cooldown active"));
+    // Fetch page audio from Gemini 2.5 Flash TTS with IndexedDB and In-flight protection
+    async function fetchGeminiTtsPage(pageIdx, customText = null) {
+      const voiceName = selectedGeminiVoice || "Leda";
+      const cacheKey = customText
+        ? `custom_${voiceName}_${customText}`
+        : `page_${pageIdx}_${voiceName}`;
 
-      if (!inflightRequests[cacheKey]) {
-        const networkJob = () => (async () => {
-          if (geminiPcmCache[cacheKey]) return geminiPcmCache[cacheKey];
-          const customKey = (customApiKeyInput && customApiKeyInput.value.trim()) ? customApiKeyInput.value.trim() : "";
-          const activeKey = customKey || apiKey || "";
-          const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent";
-          const endpoint = activeKey ? `${baseUrl}?key=${encodeURIComponent(activeKey)}` : baseUrl;
-          const rawText = customText || (PAGES[pageIdx]?.sentences || []).join(" ");
-          const ttsPrompt = `請用自然親切的台灣國語口音，維持穩定溫柔聲線，以流暢自然的正常語速朗讀：${rawText}`;
-          const payload = {
-            contents: [{ parts: [{ text: ttsPrompt }] }],
-            generationConfig: {
-              temperature: 0.3,
-              responseModalities: ["AUDIO"],
-              speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: VOICE_NAME } } }
+      if (geminiPcmCache[cacheKey]) {
+        return geminiPcmCache[cacheKey];
+      }
+
+      // Check IndexedDB persistent cache
+      if (!customText) {
+        const stored = await loadAudioFromDb(cacheKey);
+        if (stored && stored.base64Data) {
+          const binaryString = window.atob(stored.base64Data);
+          stored.wavBlobUrl = pcm16BinaryToWavBlobUrl(binaryString, stored.sampleRate || 24000, 1);
+          geminiPcmCache[cacheKey] = stored;
+          updateCacheHint();
+          return stored;
+        }
+      }
+
+      if (inflightRequests[cacheKey]) {
+        return inflightRequests[cacheKey];
+      }
+
+      const requestPromise = (async () => {
+        const activeKey = (customApiKeyInput && customApiKeyInput.value.trim())
+          ? customApiKeyInput.value.trim()
+          : apiKey;
+        
+        const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent";
+        const endpoint = activeKey ? `${baseUrl}?key=${encodeURIComponent(activeKey)}` : baseUrl;
+
+        const rawText = customText || (PAGES[pageIdx]?.sentences || []).join(" ");
+        const ttsPrompt = `請用自然親切的台灣國語口音，以溫柔平穩的語氣朗讀這段睡前故事：${rawText}`;
+
+        const payload = {
+          contents: [{ parts: [{ text: ttsPrompt }] }],
+          generationConfig: {
+            temperature: 0.3,
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: voiceName }
+              }
             }
-          };
+          }
+        };
 
-          const resp = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
+        // Generous 16s timeout protection via Promise.race
+        // (Do NOT pass AbortSignal into fetch to avoid iframe postMessage DataCloneError)
+        let timeoutId = null;
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error("TTS request timed out (16s)"));
+          }, 16000);
+        });
+
+        try {
+          const resp = await Promise.race([
+            fetch(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            }),
+            timeoutPromise
+          ]);
+          clearTimeout(timeoutId);
 
           if (!resp.ok) {
-            if (resp.status === 429 || resp.status === 503) ttsCooldownUntil = Date.now() + 12000;
-            throw new Error(`HTTP ${resp.status}`);
+            throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
           }
+
           const data = await resp.json();
-          const audioPart = (data?.candidates?.[0]?.content?.parts || []).find(p => p.inlineData && p.inlineData.data);
-          if (!audioPart || audioPart.inlineData.data.length < 150) throw new Error("Empty audio");
+          const parts = data?.candidates?.[0]?.content?.parts || [];
+          const audioPart = parts.find(p => p.inlineData && p.inlineData.data);
+          if (!audioPart || !audioPart.inlineData.data || audioPart.inlineData.data.length < 150) {
+            throw new Error("Empty audio payload received from Gemini API");
+          }
 
           let sampleRate = 24000;
-          const m = (audioPart.inlineData.mimeType || "").match(/rate=(\d+)/);
-          if (m) sampleRate = parseInt(m[1], 10);
+          const mime = audioPart.inlineData.mimeType || "";
+          if (mime.includes("rate=")) {
+            const m = mime.match(/rate=(\d+)/);
+            if (m) sampleRate = parseInt(m[1], 10);
+          }
 
           const binaryString = window.atob(audioPart.inlineData.data);
           const numSamples = Math.floor(binaryString.length / 2);
-          const floatSamples = new Float32Array(numSamples);
-          for (let i = 0; i < numSamples; i++) {
-            let sample = (binaryString.charCodeAt(i * 2 + 1) << 8) | binaryString.charCodeAt(i * 2);
-            if (sample >= 0x8000) sample -= 0x10000;
-            floatSamples[i] = Math.max(-1, Math.min(1, (sample / 32768.0) * 1.15));
-          }
           const durationSec = numSamples / sampleRate;
-          const resultObj = { base64Data: audioPart.inlineData.data, floatSamples, sampleRate, durationSec, wavBlobUrl: null };
+          const wavBlobUrl = pcm16BinaryToWavBlobUrl(binaryString, sampleRate, 1);
+
+          const resultObj = {
+            base64Data: audioPart.inlineData.data,
+            sampleRate: sampleRate,
+            durationSec: durationSec,
+            wavBlobUrl: wavBlobUrl
+          };
           geminiPcmCache[cacheKey] = resultObj;
+
+          // Save to persistent storage asynchronously
+          if (!customText) {
+            saveAudioToDb(cacheKey, {
+              base64Data: resultObj.base64Data,
+              sampleRate: resultObj.sampleRate,
+              durationSec: resultObj.durationSec
+            });
+          }
+
           updateCacheHint();
           return resultObj;
-        })();
+        } catch (err) {
+          clearTimeout(timeoutId);
+          console.warn("[Gemini TTS Request Failed]", err);
+          if (statusHint && isReading) {
+            statusHint.textContent = `💡 雲端語音未就緒，已自動無縫切換系統台灣語音`;
+          }
+          throw err;
+        }
+      })();
 
-        const queuedPromise = ttsQueueChain.then(networkJob, networkJob);
-        ttsQueueChain = queuedPromise.catch(() => {});
-        inflightRequests[cacheKey] = queuedPromise;
-        queuedPromise.finally(() => { delete inflightRequests[cacheKey]; updateCacheHint(); });
-        updateCacheHint();
+      inflightRequests[cacheKey] = requestPromise;
+      try {
+        return await requestPromise;
+      } finally {
+        delete inflightRequests[cacheKey];
       }
-
-      let timerId = null;
-      const uiTimeout = new Promise((_, reject) => {
-        timerId = setTimeout(() => reject(new Error("UI wait timeout")), uiWaitMs);
-      });
-      return Promise.race([inflightRequests[cacheKey], uiTimeout]).finally(() => clearTimeout(timerId));
-    }
-
-    function scheduleBackgroundPreload(pageIdx) {
-      if (selectedEngine !== "gemini-tts") return;
-      if (pageIdx < 0 || pageIdx >= PAGES.length) return;
-      if (PAGES[pageIdx]?.audio && (!customApiKeyInput || !customApiKeyInput.value.trim())) return;
-      const cacheKey = `page_${pageIdx}`;
-      if (geminiPcmCache[cacheKey] || inflightRequests[cacheKey]) return;
-      if (preloadDebounceTimer) clearTimeout(preloadDebounceTimer);
-      preloadDebounceTimer = setTimeout(() => {
-        fetchGeminiTtsPage(pageIdx).catch(() => {});
-      }, 450);
     }
 
     function getSentenceFractions(sentences) {
       if (!sentences || !sentences.length) return [0];
       const lengths = sentences.map(s => Math.max(1, s.replace(/\s+/g, "").length));
-      const total = lengths.reduce((a, b) => a + b, 0);
+      const total = lengths.reduce((acc, n) => acc + n, 0);
       const fractions = [0];
       let accum = 0;
-      for (let i = 0; i < lengths.length; i++) { accum += lengths[i]; fractions.push(accum / total); }
+      for (let i = 0; i < lengths.length; i++) {
+        accum += lengths[i];
+        fractions.push(accum / total);
+      }
       return fractions;
     }
 
     function clearHighlightTimers() {
-      sentenceHighlightTimers.forEach(id => clearTimeout(id));
-      sentenceHighlightTimers = [];
+      if (sentenceHighlightTimers.length) {
+        sentenceHighlightTimers.forEach(id => clearTimeout(id));
+        sentenceHighlightTimers = [];
+      }
     }
 
     function scheduleSentenceHighlights(sentences, totalDurationSec, startIdx, startOffsetSec, mySession) {
       clearHighlightTimers();
       highlightSentence(startIdx);
       if (!sentences || sentences.length <= 1 || totalDurationSec <= 0) return;
+
       const fractions = getSentenceFractions(sentences);
       for (let j = startIdx + 1; j < sentences.length; j++) {
-        const delayMs = Math.max(0, (totalDurationSec * fractions[j] - startOffsetSec) * 1000);
-        sentenceHighlightTimers.push(setTimeout(() => {
-          if (isReading && mySession === readSessionId) highlightSentence(j);
-        }, delayMs));
-      }
-    }
-
-    function playPcmViaWebAudio(ttsData, startOffsetSec, mySession, onFinishedCallback) {
-      try {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!window._bedtimeAudioCtx && AC) window._bedtimeAudioCtx = new AC();
-        const ctx = window._bedtimeAudioCtx;
-        if (!ctx) return false;
-        if (ctx.state === "suspended") ctx.resume().catch(() => {});
-
-        const samples = ttsData.floatSamples;
-        if (!samples || samples.length < 80) return false;
-
-        const audioBuffer = ctx.createBuffer(1, samples.length, ttsData.sampleRate || 24000);
-        audioBuffer.getChannelData(0).set(samples);
-
-        stopActiveWebAudioSource();
-        const source = ctx.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(ctx.destination);
-        window._activeAudioSource = source;
-        source.onended = () => {
-          if (window._activeAudioSource === source) window._activeAudioSource = null;
-          if (mySession === readSessionId && isReading && onFinishedCallback) onFinishedCallback();
-        };
-        source.start(0, Math.min(Math.max(0, startOffsetSec || 0), Math.max(0, audioBuffer.duration - 0.05)));
-        return true;
-      } catch (e) { return false; }
-    }
-
-    function stopActiveWebAudioSource() {
-      if (window._activeAudioSource) {
-        try { window._activeAudioSource.onended = null; window._activeAudioSource.stop(); window._activeAudioSource.disconnect(); } catch (e) {}
-        window._activeAudioSource = null;
+        const targetSec = totalDurationSec * fractions[j];
+        const delayMs = Math.max(0, (targetSec - startOffsetSec) * 1000);
+        const timerId = setTimeout(() => {
+          if (isReading && mySession === readSessionId) {
+            highlightSentence(j);
+          }
+        }, delayMs);
+        sentenceHighlightTimers.push(timerId);
       }
     }
 
     function updateCacheHint() {
-      if (engineSelect && engineSelect.value !== selectedEngine) engineSelect.value = selectedEngine;
-      const pageKey = `page_${currentPageIndex}`;
-      if (!cacheDot) return;
-      if (parentAudioCache[currentPageIndex]) {
-        cacheDot.textContent = "❤️ 爸媽錄音已就緒";
-      } else if (PAGES[currentPageIndex]?.audio && (!customApiKeyInput || !customApiKeyInput.value.trim())) {
-        cacheDot.textContent = "✨ 台灣自然語音已就緒";
-      } else if (selectedEngine === "web-speech") {
-        cacheDot.textContent = "⚡ 內建台灣語音";
-      } else if (geminiPcmCache[pageKey]) {
-        cacheDot.textContent = "✨ 語音已就緒";
-      } else if (inflightRequests[pageKey]) {
-        cacheDot.textContent = "⏳ 預載語音中...";
-      } else {
-        cacheDot.textContent = "";
+      const pageKey = `page_${currentPageIndex}_${selectedGeminiVoice || "Leda"}`;
+      if (cacheDot) {
+        if (parentAudioCache[currentPageIndex]) {
+          cacheDot.textContent = "❤️ 爸媽錄音已就緒";
+        } else if (geminiPcmCache[pageKey]) {
+          cacheDot.textContent = "✨ 本頁語音已就緒";
+        } else {
+          cacheDot.textContent = "";
+        }
       }
     }
 
     function scoreTaiwanVoice(v) {
-      const combined = ((v.lang || "") + " " + (v.name || "")).toLowerCase().replace("_", "-");
-      if (!/zh|cmn|chinese|taiwan|國語|臺灣|台灣|美佳|mei-jia|hsiao|yunjhe/i.test(combined)) return -100;
-      let s = 0;
-      if (/zh-tw|hant-tw|taiwan|臺灣|台灣|美佳|mei-jia|hsiaochen|hsiaoyu|yunjhe|曉臻|曉雨|允哲/i.test(combined)) s += 100;
-      else if (/hant|hk/i.test(combined)) s += 10;
-      else s -= 50;
-      if (/natural|neural|online|premium|enhanced|siri|優化|高音質|增強/i.test(combined)) s += 45;
-      if (/hsiaochen|hsiaoyu|mei-jia|美佳|曉臻|曉雨|google 國語/i.test(combined)) s += 25;
-      if (!v.localService) s += 10;
-      return s;
+      const lang = (v.lang || "").toLowerCase().replace("_", "-");
+      const name = (v.name || "").toLowerCase();
+      const combined = lang + " " + name;
+
+      if (!/zh|cmn|chinese|taiwan|國語|臺灣|台灣|美佳|mei-jia|hsiao|yunjhe/i.test(combined)) {
+        return -100;
+      }
+
+      let score = 0;
+      if (lang === "zh-tw" || lang.includes("zh-tw") || lang.includes("hant-tw") || /taiwan|臺灣|台灣|美佳|mei-jia|hsiaochen|hsiaoyu|yunjhe|曉臻|曉雨|允哲/i.test(combined)) {
+        score += 100;
+      } else if (lang.includes("hant") || lang.includes("hk")) {
+        score += 10;
+      } else if (lang.includes("cn") || lang.includes("hans") || /mainland|普通话|中国/i.test(combined)) {
+        score -= 50;
+      }
+
+      if (/natural|neural|online|premium|enhanced|siri|優化|高音質|增強/i.test(combined)) {
+        score += 45;
+      }
+      if (/hsiaochen|hsiaoyu|mei-jia|美佳|曉臻|曉雨|google 國語（臺灣）|google 國語/i.test(combined)) {
+        score += 25;
+      }
+      if (!v.localService) {
+        score += 10;
+      }
+      return score;
     }
 
     function refreshVoices() {
       if (!("speechSynthesis" in window)) return;
-      const raw = window.speechSynthesis.getVoices() || [];
-      if (!raw.length) return;
-      const scored = raw.map(v => ({ voice: v, score: scoreTaiwanVoice(v) })).filter(x => x.score > -50).sort((a, b) => b.score - a.score);
+      const rawVoices = window.speechSynthesis.getVoices() || [];
+      if (!rawVoices.length) return;
+      availableVoices = rawVoices;
+
+      const scored = rawVoices
+        .map(v => ({ voice: v, score: scoreTaiwanVoice(v) }))
+        .filter(item => item.score > -50)
+        .sort((a, b) => b.score - a.score);
+
       bestTaiwanVoice = scored.length > 0 ? scored[0].voice : null;
+
+      const prevSelection = selectedVoiceURI;
+      voiceSelect.innerHTML = '<option value="auto-tw">自動最佳台灣語音 (推薦)</option>';
+      scored.forEach(({ voice, score }) => {
+        const opt = document.createElement("option");
+        opt.value = voice.voiceURI;
+        const isTW = score >= 100 ? "🇹🇼 " : "";
+        opt.textContent = `${isTW}${voice.name} (${voice.lang})`;
+        voiceSelect.appendChild(opt);
+      });
+
+      if (prevSelection && Array.from(voiceSelect.options).some(o => o.value === prevSelection)) {
+        voiceSelect.value = prevSelection;
+      } else {
+        selectedVoiceURI = "auto-tw";
+        voiceSelect.value = "auto-tw";
+      }
+
+      if (bestTaiwanVoice) {
+        detectedVoiceNote.textContent = `已鎖定：${bestTaiwanVoice.name} (${bestTaiwanVoice.lang})`;
+      } else {
+        detectedVoiceNote.textContent = "將以 zh-TW 台灣國語朗讀。";
+      }
     }
 
     if ("speechSynthesis" in window) {
@@ -401,8 +606,24 @@
       window.speechSynthesis.onvoiceschanged = refreshVoices;
     }
 
+    function getActiveVoice() {
+      if (!availableVoices.length && "speechSynthesis" in window) {
+        refreshVoices();
+      }
+      if (selectedVoiceURI !== "auto-tw") {
+        const chosen = availableVoices.find(v => v.voiceURI === selectedVoiceURI);
+        if (chosen) return chosen;
+      }
+      return bestTaiwanVoice;
+    }
+
     function cleanTextForTTS(text) {
-      return text.replace(/——+/g, "，").replace(/……+/g, "，").replace(/[「」『』【】]/g, " ").replace(/\s+/g, " ").trim();
+      return text
+        .replace(/——+/g, "，")
+        .replace(/……+/g, "，")
+        .replace(/[「」『』【】]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
     }
 
     function renderPage() {
@@ -418,22 +639,33 @@
         const pEl = document.createElement("p");
         pEl.className = "sentence-item" + (idx === currentSentenceIndex ? " sentence-active" : "");
         pEl.textContent = sentence;
-        pEl.addEventListener("click", () => { unlockAudioOnUserGesture(); startReadingPage(idx, true); });
+        pEl.addEventListener("click", () => {
+          unlockAudioOnUserGesture();
+          startReadingPage(idx, true);
+        });
         storySentences.appendChild(pEl);
       });
 
       prevPageBtn.disabled = currentPageIndex === 0;
       nextPageBtn.disabled = currentPageIndex === PAGES.length - 1;
-      recordStatusText.textContent = parentAudioCache[currentPageIndex]
-        ? `✅ 第 ${currentPageIndex + 1} 頁已儲存爸媽專屬語音！`
-        : "錄音或匯入後，本頁會自動優先播放您的聲音。";
+
+      if (parentAudioCache[currentPageIndex]) {
+        recordStatusText.textContent = `✅ 第 ${currentPageIndex + 1} 頁已儲存爸媽專屬語音！`;
+      } else {
+        recordStatusText.textContent = "錄音或匯入後，本頁會自動優先播放您的聲音。";
+      }
       updateCacheHint();
     }
 
     function highlightSentence(idx) {
       currentSentenceIndex = idx;
-      storySentences.querySelectorAll(".sentence-item").forEach((el, i) => {
-        el.classList.toggle("sentence-active", idx === -2 || i === idx);
+      const items = storySentences.querySelectorAll(".sentence-item");
+      items.forEach((el, i) => {
+        if (idx === -2 || i === idx) {
+          el.classList.add("sentence-active");
+        } else {
+          el.classList.remove("sentence-active");
+        }
       });
     }
 
@@ -441,7 +673,7 @@
       if (isReading) {
         readingIndicator.classList.remove("hidden");
         if (isGeneratingAudio) {
-          readingIndicatorText.textContent = "準備語音中...";
+          readingIndicatorText.textContent = "準備語音...";
           playToggleIcon.textContent = "⏳";
           playToggleLabel.textContent = "讀取中";
           playToggleBtn.className = "bg-amber-300/95 text-[#1C1714] font-bold text-xs px-3.5 py-2 rounded-full shadow-lg flex items-center gap-1.5 transition backdrop-blur-md";
@@ -461,8 +693,14 @@
     }
 
     function clearTimers() {
-      if (keepAliveInterval) { clearInterval(keepAliveInterval); keepAliveInterval = null; }
-      if (nextSentenceTimeout) { clearTimeout(nextSentenceTimeout); nextSentenceTimeout = null; }
+      if (keepAliveInterval) {
+        clearInterval(keepAliveInterval);
+        keepAliveInterval = null;
+      }
+      if (nextSentenceTimeout) {
+        clearTimeout(nextSentenceTimeout);
+        nextSentenceTimeout = null;
+      }
       clearHighlightTimers();
     }
 
@@ -472,9 +710,15 @@
       isGeneratingAudio = false;
       clearTimers();
       window._activeBedtimeUtterance = null;
-      stopActiveWebAudioSource();
-      try { geminiAudioPlayer.pause(); geminiAudioPlayer.currentTime = 0; } catch (e) {}
-      if ("speechSynthesis" in window) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+      try {
+        geminiAudioPlayer.pause();
+        geminiAudioPlayer.currentTime = 0;
+      } catch (e) {}
+      if ("speechSynthesis" in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
       highlightSentence(-1);
       syncControlButtons();
     }
@@ -490,67 +734,77 @@
           renderPage();
           syncControlButtons();
           startReadingPage(0, true, mySession);
-        }, 550);
+        }, 500);
       } else {
         isReading = false;
         isGeneratingAudio = false;
         clearTimers();
         highlightSentence(-1);
         syncControlButtons();
-        if (statusHint) statusHint.textContent = currentPageIndex === PAGES.length - 1 ? "🌙 故事聽完囉，晚安！" : "左右滑動翻頁・點文字可從該段朗讀";
+        if (statusHint) {
+          statusHint.textContent = currentPageIndex === PAGES.length - 1 ? "🌙 故事聽完囉，晚安！" : "左右滑動翻頁・點文字可從該段朗讀";
+        }
       }
     }
 
+    // Direct hardware playback via HTML5 <audio> element
     function playAudioElementUrl(blobUrl, startOffsetSec, mySession, onEndedCallback) {
       if (!isReading || mySession !== readSessionId) return;
       isGeneratingAudio = false;
       syncControlButtons();
-      geminiAudioPlayer.onloadedmetadata = () => {
-        if (geminiAudioPlayer.duration && !isNaN(geminiAudioPlayer.duration)) {
-          const page = PAGES[currentPageIndex];
-          if (page?.sentences) scheduleSentenceHighlights(page.sentences, geminiAudioPlayer.duration, Math.max(0, currentSentenceIndex), startOffsetSec, mySession);
-        }
+
+      geminiAudioPlayer.onended = () => {
+        if (mySession !== readSessionId) return;
+        onEndedCallback();
       };
-      geminiAudioPlayer.onended = () => { if (mySession === readSessionId) onEndedCallback(); };
-      geminiAudioPlayer.onerror = () => { if (mySession === readSessionId) startWebSpeechFallback(Math.max(0, currentSentenceIndex), mySession); };
+      geminiAudioPlayer.onerror = (e) => {
+        console.error("Audio element error on playing blob:", e);
+        if (mySession !== readSessionId) return;
+        if (statusHint) {
+          statusHint.textContent = "⚠️ 語音播放失敗，請檢查權限或重新點擊";
+        }
+        stopReading();
+      };
+
       geminiAudioPlayer.src = blobUrl;
-      if (startOffsetSec > 0) geminiAudioPlayer.currentTime = startOffsetSec;
-      geminiAudioPlayer.play().catch(() => { if (mySession === readSessionId) startWebSpeechFallback(Math.max(0, currentSentenceIndex), mySession); });
+      if (startOffsetSec > 0) {
+        geminiAudioPlayer.currentTime = startOffsetSec;
+      }
+      geminiAudioPlayer.play().catch((e) => {
+        console.error("Audio play promise rejected:", e);
+        if (mySession !== readSessionId) return;
+        stopReading();
+      });
     }
 
     async function startReadingPage(startIdx = 0, autoContinuePages = true, existingSession = null) {
       const mySession = existingSession !== null ? existingSession : ++readSessionId;
       clearTimers();
-      stopActiveWebAudioSource();
-      try { geminiAudioPlayer.pause(); } catch (e) {}
-      if ("speechSynthesis" in window) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+      try {
+        geminiAudioPlayer.pause();
+      } catch (e) {}
+      if ("speechSynthesis" in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
 
       isReading = true;
       isAutoBedtime = autoContinuePages;
       syncControlButtons();
 
+      // Priority 1: Parent recorded audio for this page
       if (parentAudioCache[currentPageIndex]) {
         highlightSentence(-2);
         playAudioElementUrl(parentAudioCache[currentPageIndex], 0, mySession, () => handlePageFinished(mySession));
         return;
       }
 
-      const currentPageObj = PAGES[currentPageIndex];
-      if (selectedEngine !== "web-speech" && currentPageObj?.audio && (!customApiKeyInput || !customApiKeyInput.value.trim())) {
-        isGeneratingAudio = false;
-        syncControlButtons();
-        const fractions = getSentenceFractions(currentPageObj.sentences);
-        const estDuration = currentPageObj.durationSec || 10.5;
-        const startOffsetSec = estDuration * (fractions[startIdx] || 0);
-        scheduleSentenceHighlights(currentPageObj.sentences, estDuration, startIdx, startOffsetSec, mySession);
-        playAudioElementUrl(currentPageObj.audio, startOffsetSec, mySession, () => handlePageFinished(mySession));
-        return;
-      }
-
+      // Priority 2: Gemini 2.5 Flash TTS
       if (selectedEngine === "gemini-tts") {
         try {
           const page = PAGES[currentPageIndex];
-          const cacheKey = `page_${currentPageIndex}`;
+          const cacheKey = `page_${currentPageIndex}_${selectedGeminiVoice || "Leda"}`;
           if (!geminiPcmCache[cacheKey]) {
             isGeneratingAudio = true;
             syncControlButtons();
@@ -559,33 +813,40 @@
           const ttsData = await fetchGeminiTtsPage(currentPageIndex);
           if (!isReading || mySession !== readSessionId) return;
 
+          // Delayed Lookahead Prefetching: only prefetch Page N+1 after Page N has played smoothly for 3.5s
           if (currentPageIndex + 1 < PAGES.length) {
             const nextIdx = currentPageIndex + 1;
-            const nextKey = `page_${nextIdx}`;
-            if (!geminiPcmCache[nextKey] && !inflightRequests[nextKey]) {
-              fetchGeminiTtsPage(nextIdx).catch(() => {});
-            }
+            setTimeout(() => {
+              if (isReading && mySession === readSessionId && currentPageIndex === nextIdx - 1) {
+                fetchGeminiTtsPage(nextIdx).catch(() => {});
+              }
+            }, 3500);
           }
 
           isGeneratingAudio = false;
           syncControlButtons();
+
           const fractions = getSentenceFractions(page.sentences);
           const startOffsetSec = (ttsData.durationSec || 0) * (fractions[startIdx] || 0);
           scheduleSentenceHighlights(page.sentences, ttsData.durationSec || 0, startIdx, startOffsetSec, mySession);
 
-          if (!playPcmViaWebAudio(ttsData, startOffsetSec, mySession, () => handlePageFinished(mySession))) {
-            playAudioElementUrl(ensureWavBlobUrl(ttsData), startOffsetSec, mySession, () => handlePageFinished(mySession));
-          }
+          // Fast direct playback via native <audio> (eliminates decodeAudioData overhead)
+          playAudioElementUrl(ttsData.wavBlobUrl, startOffsetSec, mySession, () => handlePageFinished(mySession));
           return;
         } catch (err) {
           if (!isReading || mySession !== readSessionId) return;
+          console.warn("[startReadingPage TTS Failed -> Fallback to Web Speech]", err);
           isGeneratingAudio = false;
           syncControlButtons();
+          if (statusHint) {
+            statusHint.textContent = "💡 雲端聲線未就緒，已無縫切換至手機原生台灣語音";
+          }
           startWebSpeechFallback(startIdx, mySession);
           return;
         }
       }
 
+      // Priority 3: Offline Browser Web Speech API
       startWebSpeechFallback(startIdx, mySession);
     }
 
@@ -594,34 +855,56 @@
         stopReading();
         return;
       }
+
       keepAliveInterval = setInterval(() => {
-        if (!isReading || mySession !== readSessionId) { clearInterval(keepAliveInterval); return; }
+        if (!isReading || mySession !== readSessionId) {
+          clearInterval(keepAliveInterval);
+          return;
+        }
         if (window.speechSynthesis.speaking && window.speechSynthesis.paused) {
-          try { window.speechSynthesis.resume(); } catch (e) {}
+          try {
+            window.speechSynthesis.resume();
+          } catch (e) {}
         }
       }, 4000);
+
       speakSentenceStep(startIdx, mySession);
     }
 
     function speakSentenceStep(sIdx, mySession) {
       if (!isReading || mySession !== readSessionId) return;
       const page = PAGES[currentPageIndex];
+
       if (!page || sIdx >= page.sentences.length) {
         handlePageFinished(mySession);
         return;
       }
+
       highlightSentence(sIdx);
-      const utter = new SpeechSynthesisUtterance(cleanTextForTTS(page.sentences[sIdx]));
+      const rawText = page.sentences[sIdx];
+      const cleanText = cleanTextForTTS(rawText);
+
+      const utter = new SpeechSynthesisUtterance(cleanText);
       window._activeBedtimeUtterance = utter;
-      if (!bestTaiwanVoice && "speechSynthesis" in window) refreshVoices();
-      if (bestTaiwanVoice) { utter.voice = bestTaiwanVoice; utter.lang = bestTaiwanVoice.lang || "zh-TW"; }
-      else { utter.lang = "zh-TW"; }
+
+      const chosenVoice = getActiveVoice();
+      if (chosenVoice) {
+        utter.voice = chosenVoice;
+        utter.lang = chosenVoice.lang || "zh-TW";
+      } else {
+        utter.lang = "zh-TW";
+      }
+
       utter.rate = 1.0;
+      utter.pitch = 1.0;
+      utter.volume = 1.0;
 
       let startedSpeaking = false;
       const watchdog = setTimeout(() => {
-        if (!startedSpeaking && mySession === readSessionId && isReading) stopReading();
-      }, 2500);
+        if (!startedSpeaking && mySession === readSessionId && isReading) {
+          stopReading();
+        }
+      }, 2200);
 
       utter.onstart = () => {
         startedSpeaking = true;
@@ -630,19 +913,34 @@
         isGeneratingAudio = false;
         syncControlButtons();
       };
+
       utter.onend = () => {
         clearTimeout(watchdog);
         if (!isReading || mySession !== readSessionId) return;
-        nextSentenceTimeout = setTimeout(() => speakSentenceStep(sIdx + 1, mySession), 240);
+        nextSentenceTimeout = setTimeout(() => {
+          speakSentenceStep(sIdx + 1, mySession);
+        }, 280);
       };
+
       utter.onerror = (ev) => {
         clearTimeout(watchdog);
         if (!isReading || mySession !== readSessionId) return;
         if (ev && (ev.error === "interrupted" || ev.error === "canceled")) return;
-        if (!startedSpeaking) { stopReading(); return; }
-        nextSentenceTimeout = setTimeout(() => speakSentenceStep(sIdx + 1, mySession), 240);
+        if (!startedSpeaking) {
+          stopReading();
+          return;
+        }
+        nextSentenceTimeout = setTimeout(() => {
+          speakSentenceStep(sIdx + 1, mySession);
+        }, 280);
       };
-      try { window.speechSynthesis.speak(utter); } catch (e) { clearTimeout(watchdog); stopReading(); }
+
+      try {
+        window.speechSynthesis.speak(utter);
+      } catch (e) {
+        clearTimeout(watchdog);
+        stopReading();
+      }
     }
 
     function goToPage(newIndex) {
@@ -654,14 +952,34 @@
       if (wasReading) {
         startReadingPage(0, true);
       } else {
-        scheduleBackgroundPreload(currentPageIndex);
+        // Debounced prefetch: on manual page turn, wait 1.2s of inactivity before prefetching current page
+        clearTimeout(window._turnPrefetchTimer);
+        window._turnPrefetchTimer = setTimeout(() => {
+          fetchGeminiTtsPage(currentPageIndex).catch(() => {});
+        }, 1200);
       }
     }
 
+    // Event Listeners
     playToggleBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       unlockAudioOnUserGesture();
-      if (isReading) stopReading(); else startReadingPage(0, true);
+      if (isReading) {
+        if (isGeneratingAudio) {
+          // If currently waiting for TTS generation and user taps again,
+          // immediately skip waiting and switch to offline Web Speech for instant playback
+          isGeneratingAudio = false;
+          syncControlButtons();
+          if (statusHint) {
+            statusHint.textContent = "💡 已為您切換至即時語音朗讀";
+          }
+          startWebSpeechFallback(0, readSessionId);
+          return;
+        }
+        stopReading();
+      } else {
+        startReadingPage(0, true);
+      }
     });
 
     voiceInfoBtn.addEventListener("click", (e) => {
@@ -671,45 +989,88 @@
       voiceModal.classList.remove("hidden");
     });
 
-    prevPageBtn.addEventListener("click", (e) => { e.stopPropagation(); unlockAudioOnUserGesture(); goToPage(currentPageIndex - 1); });
-    nextPageBtn.addEventListener("click", (e) => { e.stopPropagation(); unlockAudioOnUserGesture(); goToPage(currentPageIndex + 1); });
+    prevPageBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      unlockAudioOnUserGesture();
+      goToPage(currentPageIndex - 1);
+    });
 
-    let touchStartX = 0, touchStartY = 0;
+    nextPageBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      unlockAudioOnUserGesture();
+      goToPage(currentPageIndex + 1);
+    });
+
+    // Touch Swipe Left / Right Support
+    let touchStartX = 0;
+    let touchStartY = 0;
     storybookMain.addEventListener("touchstart", (e) => {
-      if (e.touches?.length === 1) { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }
+      if (!e.touches || e.touches.length !== 1) return;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
     }, { passive: true });
+
     storybookMain.addEventListener("touchend", (e) => {
-      if (e.changedTouches?.length === 1) {
-        const dx = e.changedTouches[0].clientX - touchStartX, dy = e.changedTouches[0].clientY - touchStartY;
-        if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.3) {
-          unlockAudioOnUserGesture();
-          if (dx < 0 && currentPageIndex < PAGES.length - 1) goToPage(currentPageIndex + 1);
-          else if (dx > 0 && currentPageIndex > 0) goToPage(currentPageIndex - 1);
+      if (!e.changedTouches || e.changedTouches.length !== 1) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+        unlockAudioOnUserGesture();
+        if (dx < 0 && currentPageIndex < PAGES.length - 1) {
+          goToPage(currentPageIndex + 1);
+        } else if (dx > 0 && currentPageIndex > 0) {
+          goToPage(currentPageIndex - 1);
         }
       }
     }, { passive: true });
 
-    closeVoiceModalBtn.addEventListener("click", () => voiceModal.classList.add("hidden"));
-    confirmVoiceModalBtn.addEventListener("click", () => voiceModal.classList.add("hidden"));
-    engineSelect.addEventListener("change", (e) => { selectedEngine = e.target.value; updateCacheHint(); });
+    closeVoiceModalBtn.addEventListener("click", () => {
+      voiceModal.classList.add("hidden");
+    });
+
+    confirmVoiceModalBtn.addEventListener("click", () => {
+      voiceModal.classList.add("hidden");
+    });
+
+    engineSelect.addEventListener("change", (e) => {
+      selectedEngine = e.target.value;
+      updateCacheHint();
+    });
+
+    geminiVoiceSelect.addEventListener("change", (e) => {
+      selectedGeminiVoice = e.target.value;
+      fetchGeminiTtsPage(currentPageIndex).catch(() => {});
+    });
+
+    voiceSelect.addEventListener("change", (e) => {
+      selectedVoiceURI = e.target.value;
+      const v = getActiveVoice();
+      if (v) {
+        detectedVoiceNote.textContent = `已選擇：${v.name} (${v.lang})`;
+      }
+    });
 
     downloadWavBtn.addEventListener("click", async () => {
       unlockAudioOnUserGesture();
-      const orig = downloadWavBtn.textContent;
+      const origText = downloadWavBtn.textContent;
       try {
         downloadWavBtn.textContent = "⏳ 合成中...";
         downloadWavBtn.disabled = true;
-        const ttsData = await fetchGeminiTtsPage(currentPageIndex, null, 35000);
+        const ttsData = await fetchGeminiTtsPage(currentPageIndex);
         const a = document.createElement("a");
-        a.href = ensureWavBlobUrl(ttsData);
+        a.href = ttsData.wavBlobUrl;
         a.download = `有聲繪本_第${currentPageIndex + 1}頁_台灣語音.wav`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
         downloadWavBtn.textContent = "✅ 已下載";
       } catch (err) {
-        downloadWavBtn.textContent = "⚠️ 需填入 Key";
+        downloadWavBtn.textContent = "⚠️ 合成失敗";
       } finally {
         downloadWavBtn.disabled = false;
-        setTimeout(() => { downloadWavBtn.textContent = orig; }, 2500);
+        setTimeout(() => {
+          downloadWavBtn.textContent = origText;
+        }, 2500);
       }
     });
 
@@ -722,7 +1083,7 @@
         recordBtn.className = "flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-3 rounded-xl transition";
         return;
       }
-      if (!navigator.mediaDevices?.getUserMedia) {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         recordStatusText.textContent = "⚠️ 瀏覽器未開啟麥克風權限，請使用右側「匯入音檔」。";
         return;
       }
@@ -731,11 +1092,15 @@
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         recordedChunks = [];
         mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.ondataavailable = (ev) => { if (ev.data?.size > 0) recordedChunks.push(ev.data); };
+        mediaRecorder.ondataavailable = (ev) => {
+          if (ev.data && ev.data.size > 0) recordedChunks.push(ev.data);
+        };
         mediaRecorder.onstop = () => {
           stream.getTracks().forEach(t => t.stop());
-          parentAudioCache[currentPageIndex] = URL.createObjectURL(new Blob(recordedChunks, { type: "audio/webm" }));
+          const blob = new Blob(recordedChunks, { type: "audio/webm" });
+          parentAudioCache[currentPageIndex] = URL.createObjectURL(blob);
           selectedEngine = "parent-record";
+          engineSelect.value = "parent-record";
           recordStatusText.textContent = `✅ 第 ${currentPageIndex + 1} 頁錄音完成！`;
           updateCacheHint();
         };
@@ -750,10 +1115,11 @@
     });
 
     uploadAudioInput.addEventListener("change", (e) => {
-      const file = e.target.files?.[0];
+      const file = e.target.files && e.target.files[0];
       if (!file) return;
       parentAudioCache[currentPageIndex] = URL.createObjectURL(file);
       selectedEngine = "parent-record";
+      engineSelect.value = "parent-record";
       recordStatusText.textContent = `✅ 已匯入「${file.name}」作為第 ${currentPageIndex + 1} 頁語音！`;
       updateCacheHint();
     });
@@ -761,34 +1127,38 @@
     testVoiceBtn.addEventListener("click", async () => {
       unlockAudioOnUserGesture();
       stopReading();
-      const sampleLine = "咚咚咚！猜猜看，今天是誰要一起聽故事呀？";
+      const sampleLine = "猜猜看，今天是誰要跟我們一起聽故事呀？";
       if (selectedEngine === "gemini-tts") {
         try {
-          const ttsData = await fetchGeminiTtsPage(0, sampleLine, 11000);
+          const ttsData = await fetchGeminiTtsPage(0, sampleLine);
           isReading = true;
           const mySession = ++readSessionId;
-          const onEnd = () => { isReading = false; syncControlButtons(); };
-          if (!playPcmViaWebAudio(ttsData, 0, mySession, onEnd)) playAudioElementUrl(ensureWavBlobUrl(ttsData), 0, mySession, onEnd);
+          playAudioElementUrl(ttsData.wavBlobUrl, 0, mySession, () => {
+            isReading = false;
+            syncControlButtons();
+          });
           return;
         } catch (e) {}
       }
       if (!("speechSynthesis" in window)) return;
       const utter = new SpeechSynthesisUtterance(sampleLine);
       window._activeBedtimeUtterance = utter;
-      if (!bestTaiwanVoice) refreshVoices();
-      if (bestTaiwanVoice) { utter.voice = bestTaiwanVoice; utter.lang = bestTaiwanVoice.lang || "zh-TW"; } else { utter.lang = "zh-TW"; }
+      const v = getActiveVoice();
+      if (v) {
+        utter.voice = v;
+        utter.lang = v.lang || "zh-TW";
+      } else {
+        utter.lang = "zh-TW";
+      }
       utter.rate = 1.0;
       window.speechSynthesis.speak(utter);
     });
 
+    // Initial page load: render immediately; gently delay prefetch to keep page turn responsive
     renderPage();
-    if (!PAGES[0]?.audio) {
-      fetchGeminiTtsPage(0).then(() => {
-        if (PAGES.length > 1 && !PAGES[1]?.audio) {
-          setTimeout(() => fetchGeminiTtsPage(1).catch(() => {}), 1000);
-        }
-      }).catch(() => {});
-    }
+    setTimeout(() => {
+      fetchGeminiTtsPage(0).catch(() => {});
+    }, 800);
   </script>
 </body>
 </html>
