@@ -1,6 +1,6 @@
 ---
 name: ann-storybook
-description: "製作兒童互動有聲繪本（HTML Web App）。支援自訂或依故事自動匹配繪本畫風、跨頁角色一致性、富有節奏的繪本文筆與台灣國語語音朗讀。"
+description: 製作兒童互動有聲繪本（HTML Web App）。支援自訂或依故事自動匹配繪本畫風、跨頁角色一致性、富有節奏的繪本文筆與台灣國語語音朗讀。
 ---
 # Ann Storybook (兒童互動有聲繪本生成器)
 
@@ -82,6 +82,6 @@ description: "製作兒童互動有聲繪本（HTML Web App）。支援自訂或
 
 ### 第五步：語音朗讀與交付
 
-  - **Gemini Web Canvas 環境**：保留模板預設 `const apiKey = "";`，由環境自動串接 `gemini-2.5-flash-preview-tts` 進行溫柔的台灣國語朗讀（預設採用 Leda 柔和甜美聲線）。
+  - **Gemini Web Canvas 環境**：保留模板預設 `const apiKey = "";`，由環境自動串接 `gemini-2.5-flash-preview-tts`，透過 `AudioContext` 手勢同步解鎖與單句流水線（Sentence-Level Pipelined TTS）進行溫柔流暢的台灣國語朗讀（預設採用 Leda 柔和甜美聲線）。
   - **本機端環境**：可由本機 Agent 預先合成台灣自然語音（如 `zh-TW-HsiaoChenNeural`）並以 Base64 填入 `PAGES[i].audio`，實現離線免金鑰秒播。
-  - 介面同時內建家長麥克風錄音與系統語音備援。完成後輸出 `<故事名稱>_手機有聲繪本.html` 並開啟呈現給使用者。
+  - 介面同時內建家長麥克風錄音、WAV 下載與系統語音（Web Speech API）備援。完成後輸出 `<故事名稱>_手機有聲繪本.html` 並開啟呈現給使用者。
